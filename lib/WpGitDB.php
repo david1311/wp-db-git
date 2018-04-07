@@ -31,38 +31,42 @@ class wpGitDB
         return json_decode(json_encode($obj), true);
     }
 
-    public function compareWordpressDBVersions($array1, $array2)
-    {
-        $result = array();
-        foreach ($array1 as $key => $value) {
-            if (!is_array($array2) || !array_key_exists($key, $array2)) {
-                $result[$key] = $value;
-                continue;
-            }
-            if (is_array($value)) {
-                $recursiveArrayDiff = $this->compareWordpressDBVersions($value, $array2[$key]);
-                if (count($recursiveArrayDiff)) {
-                    $result[$key] = $recursiveArrayDiff;
+    private function compareWordpressDBVersions(array $array1, array $array2, array $keysToCompare = null) {
+        $serialize = function (&$item, $idx, $keysToCompare) {
+            if (is_array($item) && $keysToCompare) {
+                $a = array();
+                foreach ($keysToCompare as $k) {
+                    if (array_key_exists($k, $item)) {
+                        $a[$k] = $item[$k];
+                    }
                 }
-                continue;
+                $item = $a;
             }
-            if ($value != $array2[$key]) {
-                $result[$key] = $value;
-            }
-        }
-
-        return $result;
+            $item = serialize($item);
+        };
+        $deserialize = function (&$item) {
+            $item = unserialize($item);
+        };
+        array_walk($array1, $serialize, $keysToCompare);
+        array_walk($array2, $serialize, $keysToCompare);
+        // Items that are in the original array but not the new one
+        $deletions = array_diff($array1, $array2);
+        $insertions = array_diff($array2, $array1);
+        array_walk($insertions, $deserialize);
+        array_walk($deletions, $deserialize);
+        return array('insertions' => $insertions, 'deletions' => $deletions);
     }
 
     private function getValueVersionsDB() {
         $first_version = $this->convertWordpressDbOjectsToArray(json_decode(file_get_contents(plugin_dir_path(__FILE__) . 'backups/datebase_test.json')));
-
         return $this->compareWordpressDBVersions( $this->getCurrentDBStatus(), $first_version);
     }
 
     public function wordpressGitPage()
     {
-        var_dump($this->getValueVersionsDB());die();
+        $manage = new wpGitTemplateManage($this->getValueVersionsDB());
+
+        return $manage;
     }
 
     public function setMenuManageDB()

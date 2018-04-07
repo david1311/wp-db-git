@@ -8,28 +8,28 @@
 
 namespace WordpressDB;
 
+class wpGitTemplateManage {
+    private $values;
 
-class wpGitBackupDB
-{
-    public static function getBaseJsonDB($save = false) {
-        global $wpdb;
+    public function __construct($values)
+    {
+        $this->values = $values;
 
-        $tables = $wpdb->get_results('SHOW TABLES');
-        $wordpressDB = [];
-        foreach ($tables as $table)
-        {
-            $array = (array)$table;
-            $tableName = array_shift($array);
-
-            $wordpressDB[$tableName] = $wpdb->get_results('SELECT * FROM ' . $tableName);
-        }
-
-        return $save == true ? self::saveJsonFileDB($wordpressDB) : $wordpressDB;
+        $this->getTemplate();
     }
 
-    private static function saveJsonFileDB($wordpressDB) {
-        $fp = fopen(plugin_dir_path(__FILE__) . "backups/firstVersion.json", 'w');
-        fwrite($fp, json_encode($wordpressDB));
-        fclose($fp);
+    public function getTemplate() {
+
     }
+
+    private function getInsertions() {
+        return $this->values['insertions'];
+    }
+
+    private function getDeletions() {
+        return $this->values['deletions'];
+    }
+
 }
+
+
