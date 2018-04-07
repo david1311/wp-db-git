@@ -1,0 +1,10 @@
+{
+  "name": "WordpressDB/wpGitDB",
+  "type": "library",
+  "description": "Plugin to save data wpdb",
+  "autoload": {
+    "psr-4": {
+      "WordpressDB\\": "lib/"
+    }
+  }
+}
